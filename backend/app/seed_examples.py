@@ -1,6 +1,7 @@
 """Clearly labelled example data for development or documentation.
 
-These are not inserted automatically and contain no claimed experimental values.
+These records are not inserted automatically and do not claim experimental values
+or platform-verified chemical canonicalization.
 """
 
 PROPERTY_DEFINITION_EXAMPLES = (
@@ -10,13 +11,9 @@ PROPERTY_DEFINITION_EXAMPLES = (
 )
 
 POLYMER_EXAMPLES = (
-    {"name": "Polystyrene", "canonical_name": "polystyrene", "polymer_class": "polystyrene", "architecture": "homopolymer", "structures": [{"representation_type": "psmiles", "representation": "[*]CC([*])c1ccccc1", "is_canonical": True, "source": "example fixture; chemical syntax not RDKit-validated"}]},
-    {"name": "Polyethylene", "canonical_name": "polyethylene", "polymer_class": "polyolefin", "architecture": "homopolymer", "structures": [{"representation_type": "psmiles", "representation": "[*]CC[*]", "is_canonical": True, "source": "example fixture; chemical syntax not RDKit-validated"}]},
-    {"name": "Poly(ethylene oxide)", "canonical_name": "polyethylene_oxide", "polymer_class": "polyether", "architecture": "homopolymer", "structures": [{"representation_type": "psmiles", "representation": "[*]CCO[*]", "is_canonical": True, "source": "example fixture; chemical syntax not RDKit-validated"}]},
+    {"name": "Polystyrene", "canonical_name": "polystyrene", "polymer_class": "polystyrene", "architecture": "homopolymer", "structures": [{"representation_type": "psmiles", "representation": "[*]CC([*])c1ccccc1", "is_canonical": False, "source": "example fixture; not chemically validated or canonicalized by the platform"}]},
+    {"name": "Polyethylene", "canonical_name": "polyethylene", "polymer_class": "polyolefin", "architecture": "homopolymer", "structures": [{"representation_type": "psmiles", "representation": "[*]CC[*]", "is_canonical": False, "source": "example fixture; not chemically validated or canonicalized by the platform"}]},
+    {"name": "Poly(ethylene oxide)", "canonical_name": "polyethylene_oxide", "polymer_class": "polyether", "architecture": "homopolymer", "structures": [{"representation_type": "psmiles", "representation": "[*]CCO[*]", "is_canonical": False, "source": "example fixture; not chemically validated or canonicalized by the platform"}]},
 )
 
-SYNTHETIC_TEST_PROVENANCE = {
-    "source_type": "manual",
-    "title": "Synthetic software test fixture",
-    "notes": "Synthetic fixture for software testing only; not experimental reference data.",
-}
+SYNTHETIC_TEST_PROVENANCE = {"source_type": "manual", "title": "Synthetic software test fixture", "notes": "Synthetic fixture for software testing only; not experimental reference data."}
