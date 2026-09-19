@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session, selectinload
 from backend.app.core.config import settings
 from backend.app.db.session import get_db
 from backend.app.models import Polymer, PolymerStructure, PropertyDefinition, PropertyRecord, Provenance
+from backend.app.chemistry.service import process
 from backend.app.schemas.polymer import Page, PolymerCreate, PolymerListItem, PolymerRead, PolymerStructureCreate, PolymerStructureRead, PolymerUpdate, PropertyDefinitionCreate, PropertyDefinitionRead, PropertyRecordCreate, PropertyRecordRead, ProvenanceCreate, ProvenanceRead
 router=APIRouter(prefix="/api/v1",tags=["platform"])
 MAX_LIMIT=100
@@ -35,7 +36,7 @@ def list_polymers(q:str|None=None,polymer_class:str|None=None,architecture:str|N
     return Page(items=items,total=total,limit=limit,offset=offset)
 @router.post("/polymers",response_model=PolymerRead,status_code=201,tags=["polymers"])
 def create_polymer(payload:PolymerCreate,db:Session=Depends(get_db)):
-    polymer=Polymer(**payload.model_dump(exclude={"structures","canonical_name"}),canonical_name=payload.canonical_name or payload.name); polymer.structures=[PolymerStructure(**x.model_dump()) for x in payload.structures]; db.add(polymer); _commit_or_409(db,"canonical polymer name already exists"); return _polymer(db,polymer.id)
+    polymer=Polymer(**payload.model_dump(exclude={"structures","canonical_name"}),canonical_name=payload.canonical_name or payload.name); polymer.structures=[_structure_from_payload(x.model_dump()) for x in payload.structures]; db.add(polymer); _commit_or_409(db,"canonical polymer name already exists"); return _polymer(db,polymer.id)
 @router.get("/polymers/{polymer_id}",response_model=PolymerRead,tags=["polymers"])
 def get_polymer(polymer_id:uuid.UUID,db:Session=Depends(get_db)): return _polymer(db,polymer_id)
 @router.patch("/polymers/{polymer_id}",response_model=PolymerRead,tags=["polymers"])
@@ -47,7 +48,7 @@ def update_polymer(polymer_id:uuid.UUID,payload:PolymerUpdate,db:Session=Depends
     _commit_or_409(db,"canonical polymer name already exists"); return _polymer(db,polymer_id)
 @router.post("/polymers/{polymer_id}/structures",response_model=PolymerStructureRead,status_code=201,tags=["polymers"])
 def add_structure(polymer_id:uuid.UUID,payload:PolymerStructureCreate,db:Session=Depends(get_db)):
-    _polymer(db,polymer_id); structure=PolymerStructure(polymer_id=polymer_id,**payload.model_dump()); db.add(structure); db.commit(); db.refresh(structure); return structure
+    _polymer(db,polymer_id); structure=_structure_from_payload(payload.model_dump()); structure.polymer_id=polymer_id; db.add(structure); db.commit(); db.refresh(structure); return structure
 @router.get("/polymers/{polymer_id}/properties",response_model=Page[PropertyRecordRead],tags=["properties"])
 def list_property_records(polymer_id:uuid.UUID,property_key:str|None=None,provenance_type:str|None=None,page:tuple[int,int]=Depends(_page),db:Session=Depends(get_db)):
     _polymer(db,polymer_id); limit,offset=page; stmt=select(PropertyRecord).where(PropertyRecord.polymer_id==polymer_id).options(selectinload(PropertyRecord.property_definition),selectinload(PropertyRecord.provenance))
@@ -96,3 +97,13 @@ def _record(db:Session,item_id:uuid.UUID)->PropertyRecord:
     item=db.scalar(select(PropertyRecord).where(PropertyRecord.id==item_id).options(selectinload(PropertyRecord.property_definition),selectinload(PropertyRecord.provenance)))
     if not item: raise HTTPException(404,"property record not found")
     return item
+
+def _structure_from_payload(payload: dict) -> PolymerStructure:
+    result = process(payload["representation_type"], payload["representation"])
+    return PolymerStructure(
+        **payload, validation_status=result.status,
+        validation_message="; ".join(result.warnings) if result.warnings else result.validation_message,
+        normalized_representation=result.normalized_representation, connection_point_count=result.connection_point_count,
+        normalization_version=result.normalization_version, rdkit_version=result.rdkit_version,
+        validated_at=result.validated_at, derived_properties=result.derived_properties,
+    )
