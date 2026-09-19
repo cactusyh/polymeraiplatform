@@ -15,7 +15,7 @@ class PolymerStructureCreate(BaseModel):
     @field_validator("representation")
     @classmethod
     def validate_representation(cls,v:str)->str:return _text(v,"structure representation")
-class PolymerStructureRead(ORMModel): id:uuid.UUID; polymer_id:uuid.UUID; representation_type:RepresentationType; representation:str; is_canonical:bool; source:str|None; created_at:datetime
+class PolymerStructureRead(ORMModel): id:uuid.UUID; polymer_id:uuid.UUID; representation_type:RepresentationType; representation:str; is_canonical:bool; source:str|None; validation_status:Literal["not_validated","valid","partially_valid","invalid","unsupported"]; validation_message:str|None; normalized_representation:str|None; connection_point_count:int|None; normalization_version:str|None; rdkit_version:str|None; validated_at:datetime|None; derived_properties:dict[str,Any]|None; created_at:datetime
 class PolymerCreate(BaseModel):
     name:str=Field(max_length=255); canonical_name:str|None=Field(default=None,max_length=255); description:str|None=None; polymer_class:str|None=Field(default=None,max_length=100); architecture:Architecture="unknown"; number_average_molecular_weight:float|None=Field(default=None,gt=0); weight_average_molecular_weight:float|None=Field(default=None,gt=0); dispersity:float|None=Field(default=None,gt=0); degree_of_polymerization:float|None=Field(default=None,gt=0); composition_metadata:dict[str,Any]|None=None; structures:list[PolymerStructureCreate]=Field(default_factory=list)
     @field_validator("name")
