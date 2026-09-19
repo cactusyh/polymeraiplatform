@@ -2,6 +2,8 @@
 
 from backend.app.models.polymer import (
     Polymer,
+    MLModel,
+    ModelPrediction,
     PolymerStructure,
     PropertyDefinition,
     PropertyRecord,
@@ -11,6 +13,8 @@ from backend.app.models.polymer import (
 __all__ = [
     "Polymer",
     "PolymerStructure",
+    "MLModel",
+    "ModelPrediction",
     "PropertyDefinition",
     "PropertyRecord",
     "Provenance",

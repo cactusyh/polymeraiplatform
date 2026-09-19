@@ -23,4 +23,7 @@ out/
 .idea/
 
 # Logs
+
+# Local trained-model artifacts (registry stores paths and metadata only)
+/models/
 *.log

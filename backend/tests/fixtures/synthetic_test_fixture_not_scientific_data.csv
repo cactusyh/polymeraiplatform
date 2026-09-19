@@ -1,0 +1,13 @@
+representation,representation_type,property_key,target_value,target_unit,source_provenance
+[*]CC[*],psmiles,density,0.80,g/cm^3,synthetic_test_fixture_not_scientific_data
+[*]CCC[*],psmiles,density,0.82,g/cm^3,synthetic_test_fixture_not_scientific_data
+[*]CCCC[*],psmiles,density,0.84,g/cm^3,synthetic_test_fixture_not_scientific_data
+[*]COC[*],psmiles,density,0.95,g/cm^3,synthetic_test_fixture_not_scientific_data
+[*]COCO[*],psmiles,density,0.98,g/cm^3,synthetic_test_fixture_not_scientific_data
+[*]C(C)C[*],psmiles,density,0.78,g/cm^3,synthetic_test_fixture_not_scientific_data
+[*]c1ccccc1[*],psmiles,density,1.05,g/cm^3,synthetic_test_fixture_not_scientific_data
+[*]CCO[*],psmiles,density,0.91,g/cm^3,synthetic_test_fixture_not_scientific_data
+[*]CCN[*],psmiles,density,0.89,g/cm^3,synthetic_test_fixture_not_scientific_data
+[*]CCCl,psmiles,density,1.02,g/cm^3,synthetic_test_fixture_not_scientific_data
+[*]CCBr,psmiles,density,1.10,g/cm^3,synthetic_test_fixture_not_scientific_data
+[*]CCF,psmiles,density,0.87,g/cm^3,synthetic_test_fixture_not_scientific_data

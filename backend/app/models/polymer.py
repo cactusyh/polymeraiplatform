@@ -30,3 +30,40 @@ class PropertyRecord(TimestampMixin, Base):
     __tablename__="property_records"; __table_args__=(CheckConstraint(f"provenance_type IN {PROPERTY_PROVENANCE_TYPES!r}",name="ck_property_record_provenance_type"),CheckConstraint("uncertainty IS NULL OR uncertainty >= 0",name="ck_property_record_uncertainty_nonnegative"))
     id: Mapped[uuid.UUID]=mapped_column(Uuid,primary_key=True,default=uuid.uuid4); polymer_id: Mapped[uuid.UUID]=mapped_column(Uuid,ForeignKey("polymers.id",ondelete="CASCADE"),nullable=False,index=True); property_definition_id: Mapped[uuid.UUID]=mapped_column(Uuid,ForeignKey("property_definitions.id",name="fk_property_records_property_definition_id_property_definitions",ondelete="RESTRICT"),nullable=False,index=True); value: Mapped[float]=mapped_column(Float,nullable=False); unit: Mapped[str]=mapped_column(String(100),nullable=False); uncertainty: Mapped[float|None]=mapped_column(Float); uncertainty_type: Mapped[str|None]=mapped_column(String(100)); provenance_type: Mapped[str]=mapped_column(String(50),nullable=False,default="unknown",index=True); method: Mapped[str|None]=mapped_column(String(255)); temperature: Mapped[float|None]=mapped_column(Float); temperature_unit: Mapped[str|None]=mapped_column(String(50)); pressure: Mapped[float|None]=mapped_column(Float); pressure_unit: Mapped[str|None]=mapped_column(String(50)); conditions: Mapped[dict[str,Any]|None]=mapped_column(JSON); provenance_id: Mapped[uuid.UUID|None]=mapped_column(Uuid,ForeignKey("provenance.id",name="fk_property_records_provenance_id_provenance",ondelete="RESTRICT"),index=True); updated_at: Mapped[datetime]=mapped_column(DateTime(timezone=True),server_default=func.now(),onupdate=func.now(),nullable=False)
     polymer: Mapped[Polymer]=relationship(back_populates="property_records"); property_definition: Mapped[PropertyDefinition]=relationship(back_populates="property_records"); provenance: Mapped[Provenance|None]=relationship(back_populates="property_records")
+class MLModel(TimestampMixin, Base):
+    """Registry metadata for a filesystem model artifact; never stores model binaries."""
+    __tablename__ = "ml_models"
+    __table_args__ = (CheckConstraint("status IN ('test', 'candidate', 'active', 'retired')", name="ck_ml_model_status"),)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    version: Mapped[str] = mapped_column(String(100), nullable=False)
+    property_definition_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("property_definitions.id", ondelete="RESTRICT"), nullable=False, index=True)
+    target_unit: Mapped[str] = mapped_column(String(100), nullable=False)
+    model_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="candidate", index=True)
+    artifact_path: Mapped[str] = mapped_column(String(2048), nullable=False)
+    training_dataset_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    training_dataset_version: Mapped[str | None] = mapped_column(String(100))
+    feature_config: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+    metrics: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+    manifest: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+    property_definition: Mapped[PropertyDefinition] = relationship()
+
+
+class ModelPrediction(TimestampMixin, Base):
+    """Persisted model output, intentionally separate from experimental property records."""
+    __tablename__ = "model_predictions"
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    model_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("ml_models.id", ondelete="RESTRICT"), nullable=False, index=True)
+    property_definition_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("property_definitions.id", ondelete="RESTRICT"), nullable=False, index=True)
+    structure_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, ForeignKey("polymer_structures.id", ondelete="SET NULL"), index=True)
+    raw_representation: Mapped[str] = mapped_column(String(4096), nullable=False)
+    normalized_representation: Mapped[str] = mapped_column(String(4096), nullable=False)
+    prediction_value: Mapped[float] = mapped_column(Float, nullable=False)
+    target_unit: Mapped[str] = mapped_column(String(100), nullable=False)
+    uncertainty: Mapped[dict[str, Any] | None] = mapped_column(JSON)
+    applicability_domain: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+    feature_config: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+    model: Mapped[MLModel] = relationship()
+    property_definition: Mapped[PropertyDefinition] = relationship()
+    structure: Mapped[PolymerStructure | None] = relationship()
