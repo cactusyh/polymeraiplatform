@@ -1,27 +1,20 @@
 # Polymer AI Platform
 
-Polymer AI Platform is an evolving AI-native research foundation for polymer materials. It will incrementally bring together polymer data, scientific models, uncertainty-aware predictions, and reproducible research workflows.
+Polymer AI Platform is an evolving AI-native research foundation for polymer materials. It incrementally brings together polymer data, scientific models, uncertainty-aware predictions, and reproducible research workflows.
 
 ## Current status
 
-**Phase 1 — platform foundation.** The repository currently provides a minimal FastAPI backend, a Next.js frontend, environment-driven configuration, PostgreSQL development infrastructure, and backend smoke tests. It does not yet include polymer data models, property prediction, AI agents, RAG, or simulation capabilities.
+**Phase 2 — scientific polymer data model.** The platform now separates polymer identity, supplied structure representations, property definitions, individual property records, and provenance. It has no RDKit, property-prediction, simulation, agent, RAG, or search functionality yet.
 
 ## Architecture
 
 ```text
-Browser
-   │
-   ▼
-Next.js Frontend
-   │
-   ▼
-FastAPI Backend
-   │
-   ▼
-PostgreSQL
+Browser -> Next.js Frontend -> FastAPI Backend -> PostgreSQL
+                                      |
+                                      `-> SQLAlchemy + Alembic
 ```
 
-Scientific ML, agent, retrieval, and simulation layers will be introduced incrementally in later phases.
+See [docs/data-model.md](docs/data-model.md) for the scientific model, its scope, units, and future evolution.
 
 ## Requirements
 
@@ -32,34 +25,22 @@ Scientific ML, agent, retrieval, and simulation layers will be introduced increm
 
 ## Python environment
 
-Create the isolated project environment. Do not reuse unrelated research environments.
-
 ```bash
 conda env create -f environment.yml
 conda activate polymer-ai
 ```
 
-## Configuration
+## Configuration and database
 
 ```bash
 cp .env.example .env
-```
-
-`DATABASE_URL` is reserved for future database connectivity. The Phase 1 API starts without PostgreSQL, so the database is optional while developing the health endpoints.
-
-## Database
-
-When Docker is installed and running:
-
-```bash
 docker compose up -d postgres
+alembic upgrade head
 ```
 
-The Compose credentials are intentionally development-only. Do not use them outside local development.
+`DATABASE_URL` controls the database connection. The Compose credentials are intentionally development-only; do not use them outside local development. Schema creation is managed through Alembic, not application startup.
 
 ## Run the backend
-
-From the repository root:
 
 ```bash
 uvicorn backend.app.main:app --reload
@@ -67,12 +48,15 @@ uvicorn backend.app.main:app --reload
 
 Endpoints:
 
-- `GET http://127.0.0.1:8000/health`
-- `GET http://127.0.0.1:8000/api/v1/info`
+- `GET /health`
+- `GET /api/v1/info`
+- `POST /api/v1/polymers`
+- `GET /api/v1/polymers/{id}`
+- `POST /api/v1/property-definitions`
+- `GET /api/v1/property-definitions/{id}`
+- `POST /api/v1/polymers/{id}/properties`
 
 ## Run the frontend
-
-In a second terminal:
 
 ```bash
 cd frontend
@@ -80,16 +64,17 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`. The page checks `http://127.0.0.1:8000/health` by default. To use another backend URL, set `NEXT_PUBLIC_API_BASE_URL` before starting Next.js.
+The page checks `http://127.0.0.1:8000/health` by default. Set `NEXT_PUBLIC_API_BASE_URL` to use another backend URL.
 
 ## Test
 
-From the repository root, with `polymer-ai` active:
-
 ```bash
-pytest
+conda run -n polymer-ai pytest
+cd frontend && npm run build
 ```
+
+The test suite uses temporary SQLite databases for portable ORM and API validation. Production is PostgreSQL-oriented; run the migration against PostgreSQL in an environment where it is available.
 
 ## Next milestone
 
-Phase 2 will introduce a minimal scientifically sound polymer data model with first-class metadata and provenance.
+Phase 3 — Polymer CRUD, Search, and Scientific Data Management UI.
